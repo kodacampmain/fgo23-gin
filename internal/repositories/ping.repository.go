@@ -3,20 +3,21 @@ package repositories
 import (
 	"context"
 	"fgo23-gin/internal/models"
-	"fgo23-gin/pkg"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PingRepository struct{}
+type PingRepository struct {
+	db *pgxpool.Pool
+}
 
-var PingRepo *PingRepository
-
-func NewPingRepository() {
-	PingRepo = &PingRepository{}
+func NewPingRepository(db *pgxpool.Pool) *PingRepository {
+	return &PingRepository{db: db}
 }
 
 func (p *PingRepository) GetStudents(c context.Context) ([]models.Student, error) {
 	query := "SELECT id, name FROM students"
-	rows, err := pkg.DB.Query(c, query)
+	rows, err := p.db.Query(c, query)
 	if err != nil {
 		return nil, err
 	}

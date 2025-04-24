@@ -9,9 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var DB *pgxpool.Pool
-
-func Connect() error {
+func Connect() (*pgxpool.Pool, error) {
 	// create database connection string
 	dbEnv := []any{}
 	dbEnv = append(dbEnv, os.Getenv("DBUSER"))
@@ -22,15 +20,15 @@ func Connect() error {
 	// setup database connection
 	dbString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbEnv...)
 	var err error
-	DB, err = pgxpool.New(context.Background(), dbString)
+	DB, err := pgxpool.New(context.Background(), dbString)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// test oing db
 	err = DB.Ping(context.Background())
 	if err != nil {
-		return fmt.Errorf("ping failed: %w", err)
+		return nil, fmt.Errorf("ping failed: %w", err)
 	}
 	log.Println("Connected to PostgreSQL")
-	return nil
+	return DB, nil
 }

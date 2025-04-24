@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-
-	if err := pkg.Connect(); err != nil {
+	pg, err := pkg.Connect()
+	if err != nil {
 		log.Printf("[ERROR] Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
@@ -20,10 +20,10 @@ func main() {
 	// goroutine main handling shutdown
 	defer func() {
 		log.Println("Closing DB...")
-		pkg.DB.Close()
+		pg.Close()
 	}()
 
-	router := routes.InitRouter()
+	router := routes.InitRouter(pg)
 	// jalankan service
 	router.Run("127.0.0.1:8080")
 	// router.Run(":8080")

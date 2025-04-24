@@ -4,17 +4,17 @@ import (
 	"fgo23-gin/internal/repositories"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitRouter() *gin.Engine {
+func InitRouter(db *pgxpool.Pool) *gin.Engine {
 	// gin engine initialization
 	router := gin.Default()
+	pingRepo := repositories.NewPingRepository(db)
+	userRepo := repositories.NewUserRepository(db)
 
-	repositories.NewPingRepository()
-	repositories.NewUserRepository()
-
-	addPingRouter(router)
-	addUserRouter(router)
+	addPingRouter(router, pingRepo)
+	addUserRouter(router, userRepo)
 
 	return router
 }

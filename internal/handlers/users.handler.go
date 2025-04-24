@@ -19,11 +19,13 @@ type userStruct struct {
 	Created_at time.Time `json:"-" form:"-" db:"created_at"`
 }
 
-type UserHandler struct{}
+type UserHandler struct {
+	userRepo *repositories.UserRepository
+}
 
 // Initialization
-func NewUserHandler() *UserHandler {
-	return &UserHandler{}
+func NewUserHandler(userRepo *repositories.UserRepository) *UserHandler {
+	return &UserHandler{userRepo: userRepo}
 }
 
 func (u *UserHandler) GetEmployeeById(ctx *gin.Context) {
@@ -59,7 +61,7 @@ func (u *UserHandler) GetEmployeeById(ctx *gin.Context) {
 	// 	return
 	// }
 	name := ctx.Query("name")
-	result, err := repositories.UserRepo.FindEmployeeById(ctx.Request.Context(), idInt, name)
+	result, err := u.userRepo.FindEmployeeById(ctx.Request.Context(), idInt, name)
 	if err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -122,7 +124,7 @@ func (u *UserHandler) AddEmployee(ctx *gin.Context) {
 		return
 	}
 
-	cmd, err := repositories.UserRepo.CreateNewEmployee(ctx.Request.Context(), newEmployee)
+	cmd, err := u.userRepo.CreateNewEmployee(ctx.Request.Context(), newEmployee)
 
 	if err != nil { // error handling conversion
 		log.Println(err.Error())
