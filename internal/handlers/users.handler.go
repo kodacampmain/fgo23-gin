@@ -70,6 +70,14 @@ func (u *UserHandler) GetEmployeeById(ctx *gin.Context) {
 		return
 	}
 
+	if result == (models.Employee{}) {
+		// error 404 not found
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Data tidak ditemukan",
+		})
+		return
+	}
+
 	// pengiriman response jika user ditemukan
 	ctx.JSON(http.StatusOK, gin.H{
 		"msg":  "Success",
@@ -135,6 +143,10 @@ func (u *UserHandler) AddEmployee(ctx *gin.Context) {
 	}
 	if cmd.RowsAffected() == 0 {
 		log.Println("Query Gagal, Tidak merubah data di DB")
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Data yang diberikan salah",
+		})
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Success",

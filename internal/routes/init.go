@@ -5,9 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jmoiron/sqlx"
 )
 
-func InitRouter(db *pgxpool.Pool) *gin.Engine {
+func InitRouter(db *pgxpool.Pool, db15 *sqlx.DB) *gin.Engine {
 	// gin engine initialization
 	router := gin.Default()
 	pingRepo := repositories.NewPingRepository(db)

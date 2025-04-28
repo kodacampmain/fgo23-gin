@@ -33,6 +33,15 @@ func (p *PingHandler) GetStudents(ctx *gin.Context) {
 		return
 	}
 
+	// Logika tambahan melihat isi dari result
+	if len(result) == 0 {
+		// error 404 not found
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Data tidak ditemukan",
+		})
+		return
+	}
+
 	// mengirimkan response suatu string berisikan pong
 	// ctx.String(http.StatusOK, "pong")
 	ctx.JSON(http.StatusOK, Response{
