@@ -15,11 +15,11 @@ func main() {
 		log.Printf("[ERROR] Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
-	pg15, err := pkg.ConnectPg15()
-	if err != nil {
-		log.Printf("[ERROR] Unable to create connection: %v\n", err)
-		os.Exit(1)
-	}
+	// pg15, err := pkg.ConnectPg15()
+	// if err != nil {
+	// 	log.Printf("[ERROR] Unable to create connection: %v\n", err)
+	// 	os.Exit(1)
+	// }
 	// graceful shutdown
 	// server jalan di goroutine
 	// goroutine main handling shutdown
@@ -28,7 +28,7 @@ func main() {
 		pg.Close()
 	}()
 
-	router := routes.InitRouter(pg, pg15)
+	router := routes.InitRouter(pg)
 	// jalankan service
 	router.Run("127.0.0.1:8080")
 	// router.Run(":8080")
