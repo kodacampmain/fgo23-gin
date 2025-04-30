@@ -12,9 +12,11 @@ func InitRouter(db *pgxpool.Pool) *gin.Engine {
 	router := gin.Default()
 	pingRepo := repositories.NewPingRepository(db)
 	userRepo := repositories.NewUserRepository(db)
+	authRepo := repositories.NewAuthRepo(db)
 
 	addPingRouter(router, pingRepo)
 	addUserRouter(router, userRepo)
+	addAuthRouter(router, authRepo)
 
 	return router
 }

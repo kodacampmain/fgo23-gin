@@ -28,6 +28,13 @@ func main() {
 		pg.Close()
 	}()
 
+	// var hash pkg.HashConfig
+	// hash.UseDefaultConfig()
+	// password := "fazztrack"
+	// hashedPassword, _ := hash.GenHashedPassword(password)
+	// log.Println("[DEBUG] password: ", password)
+	// log.Println("[DEBUG] hash: ", hashedPassword)
+
 	router := routes.InitRouter(pg)
 	// jalankan service
 	router.Run("127.0.0.1:8080")
