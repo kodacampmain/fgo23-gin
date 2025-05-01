@@ -21,6 +21,6 @@ func addUserRouter(router *gin.Engine, userRepo *repositories.UserRepository) {
 	userRouter.GET("", userHandler.GetUsers)
 
 	// /users
-	userRouter.POST("", middleware.VerifyToken, middleware.AccessGateAdmin, userHandler.AddEmployee)
+	userRouter.POST("", middleware.VerifyToken, middleware.AccessGate("user", "admin"), userHandler.AddEmployee)
 
 }
