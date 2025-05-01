@@ -14,4 +14,5 @@ func addAuthRouter(router *gin.Engine, authRepo *repositories.AuthRepo) {
 	// /ping => protocol://hostname/ping => http://localhost:port/ping
 	authRouter.POST("", authHandler.Login)
 	authRouter.POST("/new", authHandler.Register)
+	authRouter.GET("/verify", authHandler.VerifyToken)
 }

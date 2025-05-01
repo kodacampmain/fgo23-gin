@@ -29,11 +29,11 @@ func (a *AuthRepo) AddNewUser(context context.Context, name string, hashedPass s
 }
 
 func (a *AuthRepo) GetUserData(context context.Context, name string) (models.Student, error) {
-	query := "select id, name, password from students where name = $1"
+	query := "select id, password, role from students where name = $1"
 	values := []any{name}
 
 	var result models.Student
-	if err := a.db.QueryRow(context, query, values...).Scan(&result.Id, &result.Name, &result.Password); err != nil {
+	if err := a.db.QueryRow(context, query, values...).Scan(&result.Id, &result.Password, &result.Role); err != nil {
 		return models.Student{}, err
 	}
 	return result, nil

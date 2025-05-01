@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -97,7 +98,55 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 	// kalau sudah berhasil login, maka berikan identitas (jwt)
+	claims := pkg.NewClaims(result.Id, result.Role)
+	token, err := claims.GenerateToken()
+	if err != nil {
+		log.Println(err.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Terjadi kesalahan server",
+		})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Login Berhasil",
+		"token":   token,
+	})
+}
+
+func (a *AuthHandler) VerifyToken(ctx *gin.Context) {
+	// 1. ambil token dari header
+	bearerToken := ctx.GetHeader("Authorization")
+	if bearerToken == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Silahkan login terlebih dahulu",
+		})
+		return
+	}
+	// 2. pisahkan token dari bearer
+	token := strings.Split(bearerToken, " ")[1]
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Silahkan login terlebih dahulu",
+		})
+		return
+	}
+	// 3. verifikasi token
+	claims := &pkg.Claims{}
+	if err := claims.VerifyToken(token); err != nil {
+		log.Println(err.Error())
+		if err.Error() == "expired token" || err.Error() == "token has invalid claims: token is expired" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Silahkan login kembali",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Terjadi kesalahan server",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Success",
+		"data":    claims,
 	})
 }
