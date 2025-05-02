@@ -130,11 +130,20 @@ func (u *UserHandler) AddEmployee(ctx *gin.Context) {
 	var newEmployee models.Employee
 	if err := ctx.ShouldBind(&newEmployee); err != nil {
 		log.Println(err)
+		if status, msg := errorMsgBuilder(err); status != 0 {
+			ctx.JSON(status, gin.H{
+				"msg": msg,
+			})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"msg": "Terjadi kesalahan sistem",
 		})
 		return
 	}
+
+	// validasi dengan regex
+	// regexp.Match()
 
 	cmd, err := u.userRepo.CreateNewEmployee(ctx.Request.Context(), newEmployee)
 
@@ -217,4 +226,14 @@ func fileHandling(ctx *gin.Context, file *multipart.FileHeader) (filename, filep
 		return "", "", err
 	}
 	return filename, filepath, nil
+}
+
+func errorMsgBuilder(err error) (status int, msg string) {
+	if strings.Contains(err.Error(), "Field validation") {
+		if strings.Contains(err.Error(), "gt") {
+			return http.StatusBadRequest, "Salary harus lebih besar dari 10"
+		}
+		return http.StatusBadRequest, "Body harus berisikan name, salary (lebih besar dari 10) dan city"
+	}
+	return 0, ""
 }
