@@ -2,3 +2,6 @@ tmp
 .fresh.yaml
 .env
 .env.*
+
+public/docs/*
+public/img/*

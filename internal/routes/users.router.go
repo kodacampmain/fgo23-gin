@@ -8,11 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func addUserRouter(router *gin.Engine, userRepo *repositories.UserRepository) {
+func addUserRouter(router *gin.Engine, userRepo *repositories.UserRepository, mdw *middlewares.Middleware) {
 	userRouter := router.Group("/users")
 	userHandler := handlers.NewUserHandler(userRepo)
-
-	middleware := middlewares.InitMiddleware()
 
 	// definisikan rute dengan params id
 	userRouter.GET("/:id", userHandler.GetEmployeeById)
@@ -21,6 +19,7 @@ func addUserRouter(router *gin.Engine, userRepo *repositories.UserRepository) {
 	userRouter.GET("", userHandler.GetUsers)
 
 	// /users
-	userRouter.POST("", middleware.VerifyToken, middleware.AccessGate("user", "admin"), userHandler.AddEmployee)
+	userRouter.POST("", mdw.VerifyToken, mdw.AccessGate("user", "admin"), userHandler.AddEmployee)
 
+	userRouter.PATCH("", mdw.VerifyToken, mdw.AccessGate("user"), userHandler.EditStudents)
 }

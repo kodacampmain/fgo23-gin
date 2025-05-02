@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fgo23-gin/internal/middlewares"
 	"fgo23-gin/internal/repositories"
 
 	"github.com/gin-gonic/gin"
@@ -14,8 +15,13 @@ func InitRouter(db *pgxpool.Pool) *gin.Engine {
 	userRepo := repositories.NewUserRepository(db)
 	authRepo := repositories.NewAuthRepo(db)
 
+	middleware := middlewares.InitMiddleware()
+
+	// serve static file
+	router.Static("/img", "public/img")
+
 	addPingRouter(router, pingRepo)
-	addUserRouter(router, userRepo)
+	addUserRouter(router, userRepo, middleware)
 	addAuthRouter(router, authRepo)
 
 	return router

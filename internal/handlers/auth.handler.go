@@ -66,12 +66,14 @@ func (a *AuthHandler) Register(ctx *gin.Context) {
 func (a *AuthHandler) Login(ctx *gin.Context) {
 	var body models.Student
 	if err := ctx.ShouldBind(&body); err != nil {
-		log.Println(err.Error())
+		log.Println("[DEBUG] Binding Error", err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Terjadi kesalahan server",
 		})
 		return
 	}
+
+	log.Println("[DEBUG] body ", body)
 
 	result, err := a.AuthRepo.GetUserData(ctx.Request.Context(), body.Name)
 	if err != nil {

@@ -3,8 +3,12 @@ package handlers
 import (
 	"fgo23-gin/internal/models"
 	"fgo23-gin/internal/repositories"
+	"fgo23-gin/pkg"
+	"fmt"
 	"log"
+	"mime/multipart"
 	"net/http"
+	fp "path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -156,4 +160,61 @@ func (u *UserHandler) AddEmployee(ctx *gin.Context) {
 	// 	"msg":  "Success",
 	// 	"data": newUsers,
 	// })
+}
+
+func (u *UserHandler) EditStudents(ctx *gin.Context) {
+	// Handling File
+	// file, err := ctx.FormFile("img")
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	ctx.JSON(http.StatusInternalServerError, gin.H{
+	// 		"message": "Terjadi kesalahan server",
+	// 	})
+	// 	return
+	// }
+	var formBody models.StudentForm
+	if err := ctx.ShouldBind(&formBody); err != nil {
+		log.Println(err.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Terjadi kesalahan server",
+		})
+		return
+	}
+	file := formBody.Image
+	var filename, filepath string
+	if file != nil {
+		var err error
+		filename, filepath, err = fileHandling(ctx, file)
+		if err != nil {
+			log.Println(err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Terjadi kesalahan upload",
+			})
+		}
+	}
+	log.Println("[DEBUG] filename", filename)
+	log.Println("[DEBUG] body", formBody)
+
+	// Handling Non-File
+	// ctx.PostForm
+	// formBody
+	// Send Response
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Update Success",
+		"data": gin.H{
+			"url": filepath,
+		},
+	})
+}
+
+func fileHandling(ctx *gin.Context, file *multipart.FileHeader) (filename, filepath string, err error) {
+	claims, _ := ctx.Get("Payload")
+	userClaims := claims.(*pkg.Claims)
+	ext := fp.Ext(file.Filename)
+	filename = fmt.Sprintf("%d_%d_students_image%s", time.Now().UnixNano(), userClaims.Id, ext)
+	filepath = fp.Join("public", "img", filename)
+	if err = ctx.SaveUploadedFile(file, filepath); err != nil {
+		return "", "", err
+	}
+	return filename, filepath, nil
 }

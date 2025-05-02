@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fgo23-gin/internal/models"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -34,4 +35,31 @@ func (u *UserRepository) CreateNewEmployee(c context.Context, newEmployee models
 		return pgconn.CommandTag{}, err
 	}
 	return cmd, nil
+}
+
+func (u *UserRepository) UpdateStudents(c context.Context, id int, body models.Student, imageUrl string) (models.Student, error) {
+	// Creating Query (Query Builder)
+	query := "UPDATE students SET "
+	// UPDATE table SET field1=value1, field2=value2 where field=value
+	values := []any{}
+	if body.Name != "" {
+		query += fmt.Sprintf("name=$%d", len(values)+1)
+		values = append(values, body.Name)
+	}
+	if body.Image != "" {
+		if len(values) > 0 {
+			query += ", "
+		}
+		query += fmt.Sprintf("images=$%d", len(values)+1)
+		values = append(values, imageUrl)
+	}
+	query += fmt.Sprintf(" WHERE id=$%d", len(values)+1)
+	values = append(values, id)
+	query += " RETURNING id,name,images"
+	// END Creating Query
+	var result models.Student
+	if err := u.db.QueryRow(c, query, values...).Scan(&result.Id, &result.Name, &result.Image); err != nil {
+		return models.Student{}, err
+	}
+	return result, nil
 }
