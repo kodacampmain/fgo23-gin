@@ -35,7 +35,9 @@ func main() {
 	// log.Println("[DEBUG] password: ", password)
 	// log.Println("[DEBUG] hash: ", hashedPassword)
 
-	router := routes.InitRouter(pg)
+	rdb := pkg.RedisConnect()
+
+	router := routes.InitRouter(pg, rdb)
 
 	// jalankan service
 	router.Run("127.0.0.1:8080")
