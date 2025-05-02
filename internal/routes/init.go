@@ -17,6 +17,8 @@ func InitRouter(db *pgxpool.Pool) *gin.Engine {
 
 	middleware := middlewares.InitMiddleware()
 
+	router.Use(middleware.CORSMiddleware)
+
 	// serve static file
 	router.Static("/img", "public/img")
 
