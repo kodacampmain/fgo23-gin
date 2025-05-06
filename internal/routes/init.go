@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fgo23-gin/internal/handlers"
 	"fgo23-gin/internal/middlewares"
 	"fgo23-gin/internal/repositories"
 
@@ -15,6 +16,7 @@ func InitRouter(db *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
 	pingRepo := repositories.NewPingRepository(db, rdb)
 	userRepo := repositories.NewUserRepository(db)
 	authRepo := repositories.NewAuthRepo(db)
+	orderRepo := repositories.NewOrderRepository(db)
 
 	middleware := middlewares.InitMiddleware()
 
@@ -26,6 +28,9 @@ func InitRouter(db *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
 	addPingRouter(router, pingRepo)
 	addUserRouter(router, userRepo, middleware)
 	addAuthRouter(router, authRepo)
+
+	orderHandler := handlers.NewOrderHandler(orderRepo)
+	router.POST("/order", middleware.VerifyToken, orderHandler.CreateTransaction)
 
 	return router
 }
