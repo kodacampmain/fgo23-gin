@@ -13,6 +13,7 @@ import (
 func InitRouter(db *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
 	// gin engine initialization
 	router := gin.Default()
+	// router := gin.New()
 	pingRepo := repositories.NewPingRepository(db, rdb)
 	userRepo := repositories.NewUserRepository(db)
 	authRepo := repositories.NewAuthRepo(db)
@@ -21,6 +22,8 @@ func InitRouter(db *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
 	middleware := middlewares.InitMiddleware()
 
 	router.Use(middleware.CORSMiddleware)
+	// router.Use(middleware.Logger)
+	// router.Use(middleware.Error)
 
 	// serve static file
 	router.Static("/img", "public/img")

@@ -5,7 +5,6 @@ import (
 	"fgo23-gin/internal/models"
 	"fmt"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -19,12 +18,22 @@ func NewOrderRepository(db *pgxpool.Pool) *OrderRepository {
 
 // pembelian oleh student id 10
 // product (1:coffee, 2) (3: cake, 1)
-func (o *OrderRepository) CreateTransaction(ctx context.Context, studentId int, transaction models.Transaction) (pgconn.CommandTag, error) {
+func (o *OrderRepository) CreateTransaction(ctx context.Context, studentId int, transaction models.Transaction) error {
+	// awali dengan db transaksi
+	tx, err := o.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	// defer func(cause error) {
+	// 	if cause:=recover()
+	// }
+	defer tx.Rollback(ctx)
+
 	// 1. buat transaksi order
 	transQuery := "INSERT INTO transactions (student_id) VALUES ($1) RETURNING id"
 	var transactionId int
-	if err := o.db.QueryRow(ctx, transQuery, studentId).Scan(&transactionId); err != nil {
-		return pgconn.CommandTag{}, err
+	if err := tx.QueryRow(ctx, transQuery, studentId).Scan(&transactionId); err != nil {
+		return err
 	}
 	// 2. masukkan detail order
 	detQuery := "INSERT INTO transactions_products (transaction_id, product_id, qty) VALUES "
@@ -43,5 +52,14 @@ func (o *OrderRepository) CreateTransaction(ctx context.Context, studentId int, 
 	}
 
 	// log.Println("[DEBUG] Transaction Details Query: ", detQuery)
-	return o.db.Exec(ctx, detQuery, values...)
+	_, err = tx.Exec(ctx, detQuery, values...)
+	if err != nil {
+		return err
+	}
+
+	// Jangan lupa commit
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	return nil
 }

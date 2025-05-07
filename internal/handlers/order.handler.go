@@ -23,8 +23,12 @@ func (o *OrderHandler) CreateTransaction(ctx *gin.Context) {
 	var body models.Transaction
 	if err := ctx.ShouldBind(&body); err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"msg": "Terjadi Kesalahan Server",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    "INTERNAL_ERROR",
+				Status:  http.StatusInternalServerError,
+				Message: "terjadi kesalahan server",
+			},
 		})
 		return
 	}
@@ -32,9 +36,10 @@ func (o *OrderHandler) CreateTransaction(ctx *gin.Context) {
 	payload, _ := ctx.Get("Payload")
 	userClaims := payload.(*pkg.Claims)
 
-	_, err := o.orderRepo.CreateTransaction(ctx.Request.Context(), userClaims.Id, body)
+	err := o.orderRepo.CreateTransaction(ctx.Request.Context(), userClaims.Id, body)
 	if err != nil {
 		log.Println(err.Error())
+		ctx.Error(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"msg": "Terjadi Kesalahan Server",
 		})
