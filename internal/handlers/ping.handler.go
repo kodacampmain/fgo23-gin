@@ -13,20 +13,31 @@ type Response struct {
 	Data any    `json:"data"`
 }
 
-type PingHandler struct{}
+type PingHandler struct {
+	pingRepo *repositories.PingRepository
+}
 
 // initialization
-func NewPingHandler() *PingHandler {
-	return &PingHandler{}
+func NewPingHandler(pingRepo *repositories.PingRepository) *PingHandler {
+	return &PingHandler{pingRepo: pingRepo}
 }
 
 // Handler
 func (p *PingHandler) GetStudents(ctx *gin.Context) {
-	result, err := repositories.PingRepo.GetStudents(ctx.Request.Context())
+	result, err := p.pingRepo.GetStudents(ctx.Request.Context())
 	if err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"msg": "Terjadi kesalahan sistem",
+		})
+		return
+	}
+
+	// Logika tambahan melihat isi dari result
+	if len(result) == 0 {
+		// error 404 not found
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Data tidak ditemukan",
 		})
 		return
 	}

@@ -3,8 +3,12 @@ package handlers
 import (
 	"fgo23-gin/internal/models"
 	"fgo23-gin/internal/repositories"
+	"fgo23-gin/pkg"
+	"fmt"
 	"log"
+	"mime/multipart"
 	"net/http"
+	fp "path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,11 +23,13 @@ type userStruct struct {
 	Created_at time.Time `json:"-" form:"-" db:"created_at"`
 }
 
-type UserHandler struct{}
+type UserHandler struct {
+	userRepo *repositories.UserRepository
+}
 
 // Initialization
-func NewUserHandler() *UserHandler {
-	return &UserHandler{}
+func NewUserHandler(userRepo *repositories.UserRepository) *UserHandler {
+	return &UserHandler{userRepo: userRepo}
 }
 
 func (u *UserHandler) GetEmployeeById(ctx *gin.Context) {
@@ -59,11 +65,19 @@ func (u *UserHandler) GetEmployeeById(ctx *gin.Context) {
 	// 	return
 	// }
 	name := ctx.Query("name")
-	result, err := repositories.UserRepo.FindEmployeeById(ctx.Request.Context(), idInt, name)
+	result, err := u.userRepo.FindEmployeeById(ctx.Request.Context(), idInt, name)
 	if err != nil {
 		log.Println(err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"msg": "Terjadi kesalahan sistem",
+		})
+		return
+	}
+
+	if result == (models.Employee{}) {
+		// error 404 not found
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Data tidak ditemukan",
 		})
 		return
 	}
@@ -116,13 +130,22 @@ func (u *UserHandler) AddEmployee(ctx *gin.Context) {
 	var newEmployee models.Employee
 	if err := ctx.ShouldBind(&newEmployee); err != nil {
 		log.Println(err)
+		if status, msg := errorMsgBuilder(err); status != 0 {
+			ctx.JSON(status, gin.H{
+				"msg": msg,
+			})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"msg": "Terjadi kesalahan sistem",
 		})
 		return
 	}
 
-	cmd, err := repositories.UserRepo.CreateNewEmployee(ctx.Request.Context(), newEmployee)
+	// validasi dengan regex
+	// regexp.Match()
+
+	cmd, err := u.userRepo.CreateNewEmployee(ctx.Request.Context(), newEmployee)
 
 	if err != nil { // error handling conversion
 		log.Println(err.Error())
@@ -133,6 +156,10 @@ func (u *UserHandler) AddEmployee(ctx *gin.Context) {
 	}
 	if cmd.RowsAffected() == 0 {
 		log.Println("Query Gagal, Tidak merubah data di DB")
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "Data yang diberikan salah",
+		})
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Success",
@@ -142,4 +169,71 @@ func (u *UserHandler) AddEmployee(ctx *gin.Context) {
 	// 	"msg":  "Success",
 	// 	"data": newUsers,
 	// })
+}
+
+func (u *UserHandler) EditStudents(ctx *gin.Context) {
+	// Handling File
+	// file, err := ctx.FormFile("img")
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	ctx.JSON(http.StatusInternalServerError, gin.H{
+	// 		"message": "Terjadi kesalahan server",
+	// 	})
+	// 	return
+	// }
+	var formBody models.StudentForm
+	if err := ctx.ShouldBind(&formBody); err != nil {
+		log.Println(err.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Terjadi kesalahan server",
+		})
+		return
+	}
+	file := formBody.Image
+	var filename, filepath string
+	if file != nil {
+		var err error
+		filename, filepath, err = fileHandling(ctx, file)
+		if err != nil {
+			log.Println(err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Terjadi kesalahan upload",
+			})
+		}
+	}
+	log.Println("[DEBUG] filename", filename)
+	log.Println("[DEBUG] body", formBody)
+
+	// Handling Non-File
+	// ctx.PostForm
+	// formBody
+	// Send Response
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Update Success",
+		"data": gin.H{
+			"url": filepath,
+		},
+	})
+}
+
+func fileHandling(ctx *gin.Context, file *multipart.FileHeader) (filename, filepath string, err error) {
+	claims, _ := ctx.Get("Payload")
+	userClaims := claims.(*pkg.Claims)
+	ext := fp.Ext(file.Filename)
+	filename = fmt.Sprintf("%d_%d_students_image%s", time.Now().UnixNano(), userClaims.Id, ext)
+	filepath = fp.Join("public", "img", filename)
+	if err = ctx.SaveUploadedFile(file, filepath); err != nil {
+		return "", "", err
+	}
+	return filename, filepath, nil
+}
+
+func errorMsgBuilder(err error) (status int, msg string) {
+	if strings.Contains(err.Error(), "Field validation") {
+		if strings.Contains(err.Error(), "gt") {
+			return http.StatusBadRequest, "Salary harus lebih besar dari 10"
+		}
+		return http.StatusBadRequest, "Body harus berisikan name, salary (lebih besar dari 10) dan city"
+	}
+	return 0, ""
 }

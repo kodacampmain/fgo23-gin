@@ -10,20 +10,39 @@ import (
 )
 
 func main() {
-
-	if err := pkg.Connect(); err != nil {
+	m := pkg.InitDB()
+	pg, err := m.Connect()
+	if err != nil {
 		log.Printf("[ERROR] Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Jika env menyatakan bahwa harus migrate, maka jalankan m.Migrate()
+
+	// pg15, err := pkg.ConnectPg15()
+	// if err != nil {
+	// 	log.Printf("[ERROR] Unable to create connection: %v\n", err)
+	// 	os.Exit(1)
+	// }
 	// graceful shutdown
 	// server jalan di goroutine
 	// goroutine main handling shutdown
 	defer func() {
 		log.Println("Closing DB...")
-		pkg.DB.Close()
+		pg.Close()
 	}()
 
-	router := routes.InitRouter()
+	// var hash pkg.HashConfig
+	// hash.UseDefaultConfig()
+	// password := "fazztrack"
+	// hashedPassword, _ := hash.GenHashedPassword(password)
+	// log.Println("[DEBUG] password: ", password)
+	// log.Println("[DEBUG] hash: ", hashedPassword)
+
+	rdb := pkg.RedisConnect()
+
+	router := routes.InitRouter(pg, rdb)
+
 	// jalankan service
 	router.Run("127.0.0.1:8080")
 	// router.Run(":8080")
