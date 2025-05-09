@@ -1,5 +1,9 @@
 # 🚀 FGO 23 GIN
 
+![alt text](https://img.shields.io/badge/Go-black?style=for-the-badge&logo=go)
+![alt text](https://img.shields.io/badge/PostgreSQL-black?style=for-the-badge&logo=postgresql)
+![alt text](https://img.shields.io/badge/Redis-black?style=for-the-badge&logo=redis)
+
 Backend project written in Go using gin-gonic framework as the backend engine and struct validation, redis for caching, and PostgreSQL as the database.
 
 ## 📦 Tech Stack
@@ -7,11 +11,11 @@ Backend project written in Go using gin-gonic framework as the backend engine an
 - [Go](https://go.dev/dl/)
 - [PostgreSQL](https://www.postgresql.org/download/)
 - [Redis](https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-windows/)
-- [Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
 - [JWT](https://github.com/golang-jwt/jwt)
 - [argon2](https://pkg.go.dev/golang.org/x/crypto/argon2)
-- [Swagger for API docs](https://swagger.io/) + [Swaggo](https://github.com/swaggo/swag)
 - [migrate](https://github.com/golang-migrate/migrate)
+- [Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
+- [Swagger for API docs](https://swagger.io/) + [Swaggo](https://github.com/swaggo/swag)
 
 ## 🌎 Environment
 
