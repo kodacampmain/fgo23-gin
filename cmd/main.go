@@ -10,11 +10,15 @@ import (
 )
 
 func main() {
-	pg, err := pkg.Connect()
+	m := pkg.InitDB()
+	pg, err := m.Connect()
 	if err != nil {
 		log.Printf("[ERROR] Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
+
+	// Jika env menyatakan bahwa harus migrate, maka jalankan m.Migrate()
+
 	// pg15, err := pkg.ConnectPg15()
 	// if err != nil {
 	// 	log.Printf("[ERROR] Unable to create connection: %v\n", err)

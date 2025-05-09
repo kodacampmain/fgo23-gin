@@ -1,5 +1,5 @@
 -- public.products definition
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
     id serial4 NOT NULL,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
     updated_at timestamp NULL,
@@ -8,5 +8,5 @@ CREATE TABLE public.products (
     CONSTRAINT products_pkey PRIMARY KEY (id)
 );
 -- public.products foreign keys
-ALTER TABLE public.products
+ALTER TABLE IF EXISTS public.products
 ADD CONSTRAINT products_promo_id_fkey FOREIGN KEY (promo_id) REFERENCES public.promos(id);
