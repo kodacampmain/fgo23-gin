@@ -1,17 +1,13 @@
 package handlers
 
 import (
+	"fgo23-gin/internal/models"
 	"fgo23-gin/internal/repositories"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-type Response struct {
-	Msg  string `json:"message"`
-	Data any    `json:"data"`
-}
 
 type PingHandler struct {
 	pingRepo *repositories.PingRepository
@@ -23,12 +19,24 @@ func NewPingHandler(pingRepo *repositories.PingRepository) *PingHandler {
 }
 
 // Handler
+
+// PingGetStudentHandler
+// @summary					Example of Ping then Get Students
+// @produce					json
+// @success					200 {object} models.Response
+// @failure					500 {object} models.ErrorResponse
+// @failure					404 {object} models.ErrorResponse
+// @router					/ping [get]
 func (p *PingHandler) GetStudents(ctx *gin.Context) {
 	result, err := p.pingRepo.GetStudents(ctx.Request.Context())
 	if err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"msg": "Terjadi kesalahan sistem",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InternalServerErrorCode,
+				Status:  http.StatusInternalServerError,
+				Message: "Terjadi Kesalahan Sistem",
+			},
 		})
 		return
 	}
@@ -36,15 +44,19 @@ func (p *PingHandler) GetStudents(ctx *gin.Context) {
 	// Logika tambahan melihat isi dari result
 	if len(result) == 0 {
 		// error 404 not found
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"message": "Data tidak ditemukan",
+		ctx.JSON(http.StatusNotFound, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.DataNotFoundCode,
+				Status:  http.StatusNotFound,
+				Message: "Data tidak ditemukan",
+			},
 		})
 		return
 	}
 
 	// mengirimkan response suatu string berisikan pong
 	// ctx.String(http.StatusOK, "pong")
-	ctx.JSON(http.StatusOK, Response{
+	ctx.JSON(http.StatusOK, models.Response{
 		Msg:  "pong",
 		Data: result,
 	})

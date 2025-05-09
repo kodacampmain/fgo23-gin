@@ -5,9 +5,13 @@ import (
 	"fgo23-gin/internal/middlewares"
 	"fgo23-gin/internal/repositories"
 
+	_ "fgo23-gin/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func InitRouter(db *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
@@ -27,6 +31,8 @@ func InitRouter(db *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
 
 	// serve static file
 	router.Static("/img", "public/img")
+
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	addPingRouter(router, pingRepo)
 	addUserRouter(router, userRepo, middleware)
