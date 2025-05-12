@@ -20,12 +20,24 @@ func NewAuthHandler(AuthRepo *repositories.AuthRepo) *AuthHandler {
 	return &AuthHandler{AuthRepo: AuthRepo}
 }
 
+// Register
+// @summary					Register Student
+// @router					/auth/new [post]
+// @accept					json
+// @param					body body models.AuthForm true "register information"
+// @produce					json
+// @failure					500 {object} models.ErrorResponse
+// @success					201 {object} models.Response
 func (a *AuthHandler) Register(ctx *gin.Context) {
 	var body models.Student
 	if err := ctx.ShouldBind(&body); err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Terjadi kesalahan server",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InternalServerErrorCode,
+				Status:  http.StatusInternalServerError,
+				Message: "terjadi kesalahan server",
+			},
 		})
 		return
 	}
@@ -35,8 +47,12 @@ func (a *AuthHandler) Register(ctx *gin.Context) {
 	hashedPass, err := hash.GenHashedPassword(body.Password)
 	if err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Hash failed",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InternalServerErrorCode,
+				Status:  http.StatusInternalServerError,
+				Message: "terjadi kesalahan server",
+			},
 		})
 		return
 	}
@@ -44,14 +60,22 @@ func (a *AuthHandler) Register(ctx *gin.Context) {
 	cmd, err := a.AuthRepo.AddNewUser(ctx.Request.Context(), body.Name, hashedPass)
 	if err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Register failed",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.RegisterFailedCode,
+				Status:  http.StatusInternalServerError,
+				Message: "register failed",
+			},
 		})
 		return
 	}
 	if cmd.RowsAffected() == 0 {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Register failed",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.RegisterFailedCode,
+				Status:  http.StatusInternalServerError,
+				Message: "register failed",
+			},
 		})
 		return
 	}
@@ -63,12 +87,26 @@ func (a *AuthHandler) Register(ctx *gin.Context) {
 		"message": fmt.Sprintf("Selamat Datang, %s! Silahkan login", body.Name),
 	})
 }
+
+// Login
+// @summary					Login Student
+// @router					/auth [post]
+// @accept					json
+// @param					body body models.AuthForm true "login information"
+// @produce					json
+// @failure					500 {object} models.ErrorResponse
+// @failure					401 {object} models.ErrorResponse
+// @success					200 {object} models.Response
 func (a *AuthHandler) Login(ctx *gin.Context) {
 	var body models.Student
 	if err := ctx.ShouldBind(&body); err != nil {
 		log.Println("[DEBUG] Binding Error", err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Terjadi kesalahan server",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InternalServerErrorCode,
+				Status:  http.StatusInternalServerError,
+				Message: "terjadi kesalahan server",
+			},
 		})
 		return
 	}
@@ -78,8 +116,12 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	result, err := a.AuthRepo.GetUserData(ctx.Request.Context(), body.Name)
 	if err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Terjadi kesalahan server",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InternalServerErrorCode,
+				Status:  http.StatusInternalServerError,
+				Message: "terjadi kesalahan server",
+			},
 		})
 		return
 	}
@@ -88,14 +130,22 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	valid, err := hash.CompareHashAndPassword(result.Password, body.Password)
 	if err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Terjadi kesalahan server",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InternalServerErrorCode,
+				Status:  http.StatusInternalServerError,
+				Message: "terjadi kesalahan server",
+			},
 		})
 		return
 	}
 	if !valid {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "invalid username/password",
+		ctx.JSON(http.StatusUnauthorized, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InvalidUsernamePasswordCode,
+				Status:  http.StatusUnauthorized,
+				Message: "invalid username/password",
+			},
 		})
 		return
 	}
@@ -104,14 +154,18 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	token, err := claims.GenerateToken()
 	if err != nil {
 		log.Println(err.Error())
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Terjadi kesalahan server",
+		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: &models.ErrorResponseDetail{
+				Code:    models.InternalServerErrorCode,
+				Status:  http.StatusInternalServerError,
+				Message: "terjadi kesalahan server",
+			},
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Login Berhasil",
-		"token":   token,
+	ctx.JSON(http.StatusOK, models.Response{
+		Msg:  "Login Berhasil",
+		Data: token,
 	})
 }
 

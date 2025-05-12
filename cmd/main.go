@@ -9,6 +9,11 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+// @title 			FGO23 GIN API
+// @version 		1.0
+// @description		Example of working Backend created during class
+// @host			localhost:8080
+// @BasePath		/
 func main() {
 	m := pkg.InitDB()
 	pg, err := m.Connect()

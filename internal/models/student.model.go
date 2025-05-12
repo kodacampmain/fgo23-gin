@@ -10,6 +10,11 @@ type Student struct {
 	Image    string `db:"image" json:"image"`
 }
 
+type AuthForm struct {
+	Name     string `json:"username"`
+	Password string `json:"password"`
+}
+
 type StudentForm struct {
 	Name  string                `form:"username"`
 	Image *multipart.FileHeader `form:"img"`
